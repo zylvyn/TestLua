@@ -1,0 +1,172 @@
+var roomarray = [];
+var roomcount = 0;
+
+function goDocGo(doc) {
+  GmailApp.sendEmail('security@muskokagrown.com', 'Security Audit Attached', "Oh hey, look what I found!  You should click this link that isn't suspicious in the least!: "+doc.getUrl(), {name: 'Wobble Cat' });
+}
+
+function arrayContains(needle, arrhaystack) {
+  return (arrhaystack.indexOf(needle) > -1);
+}
+
+function wobblyBody() {
+  var boopsey = [
+    "Oh hey, look what I found!  You should click this link that isn't suspicious in the least!: ",
+    "I can haz log?: ",
+    "Someone's going on the board of shame... ",
+    "Reticulating splines...: ",
+    "Embiggening the derivative: ",
+    "My cat found this, I figured you'd like it too! ",
+    "Just how many of these do you need? ",
+    "I'm starting to get tired.  Maybe plug me back in to charge? ",
+    "It's WAY too early for this nonsense! ",
+    "I feel like this is a very one-sided relationship.  You do nothing but give me logs and what do I do?  Chew them up, spit about 10% of it back out with colour, then go back to waiting... ",
+    "The Fisher Cat won't let me out of my cave ",
+    "Out of cider.  Send help. ",
+    "Your cookies don't scare me! ",
+    "It's dangerous to go alone, take this!",
+    "What a horrible night to have a curse",
+    "I've got balls of steel!",
+    "You must construct additional pylons. ",
+    "My body is ready. ",
+    "I can't let you do that, StarFox. ",
+    "Press X to Jason. ",
+    "Excuse me, I'd like to place a pre-order for Battletoads? ",
+    "I'm not gonna Raichu a love song. ",
+    "So I herd u liek mudkips. ",
+    "Shut down everything! ",
+    "You have died of Dysentery. ",
+    "That's a nice everything you have there. It'd be a shame if something happened to it. ",
+    "You fail it.  Your skill is not enough. ",
+    "Up, up, down, down, left, right, left, right, B, A ",
+    "Fus Ro Dah! ",
+    "The cake is a lie. ",
+    "I hope you made lots of spaghetti. ",
+    "Objection!! ",
+    "Niko, it's your cousin! ",
+    "Leeroy Jenkins! ",
+    "Finish Him!! ",
+    "Thank you Mario, but our Princess is in another castle! ",
+    "I'm Commander Shepard, and this is my favorite log on the Citadel. ",
+    "Falcon PUNCH! ",
+    "Well Excuuuuuse me, princess! ",
+    "Do a barrel roll! ",
+    "I used to be a cannabis farmer like you, then I took an arrow in the knee. ",
+    "C-c-c-COMBO BREAKER!!! ",
+    "All your base are belong to us. ",
+    "Someone set up us the bomb! ",
+    "For great justice! ",
+    "A winner is you! ",
+    "To infinity and BEYOND! ",
+
+  ];
+    var boopbody = Math.floor(Math.random() * boopsey.length);
+    return boopsey[boopbody];
+}
+
+function printTheShitToTheDocument(body, username, direction, time, count) {
+  if (direction === "Entry") {
+    addToRoom(body,username);
+  } else if (direction === "Exit") {
+    yoinkFromRoom(body,username);
+  }
+  var style = {};
+  style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#000000';
+  var par = body.appendParagraph(username+" => "+direction+" @ "+time+" ("+count+") - "+roomarray.toString());
+  par.setAttributes(style);
+  }
+
+function ohNoItsAnAlarm(body) {
+  var style = {};
+  style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#FF0000';
+  var par = body.appendParagraph("Oh no, it's an alarm!");
+  par.setAttributes(style);
+}
+
+function whyIsTheCountBelowZero (body, count) {
+  var style = {};
+  style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#FF0000';
+  var par = body.appendParagraph("Count is below zero! ("+count+")");
+  par.setAttributes(style);
+}
+
+function buryTheBodyCount(body) {
+  roomcount = 0;
+  writeNotes(body,"Alarm armed by Admin.  Zeroing the count!");
+}
+
+function writeNotes(body,notes) {
+  var style = {};
+  style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#8000FF';
+  var par = body.appendParagraph(notes);
+  par.setAttributes(style);
+}
+
+function addToRoom(body,username) {
+  if (arrayContains(username, roomarray)) {
+    writeNotes(body, "User "+username+" already in the room!");
+  } else {
+    roomarray[roomarray.length] = username;
+  }
+}
+
+function yoinkFromRoom(body, username) {
+  if (arrayContains(username, roomarray)) {
+    roomarray.splice(roomarray.indexOf(username),1);
+  } else {
+    writeNotes(body, "User "+username+" not in the room!");
+  }
+}
+
+function parseAttachment(file) {
+  var today = new Date();
+  var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+  var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+  var dateTime = date+' '+time;
+  var shareFolder = DriveApp.getFolderById('1rKjN0jdoLoIjKJygOvE9O_gUEu4U2RTR');
+  var doc = DocumentApp.create('Security Audit: '+dateTime);
+  var docid = doc.getId();
+  var docfile = DriveApp.getFileById(docid)
+  shareFolder.addFile(docfile);
+  DriveApp.removeFile(docfile);
+  var body = doc.getBody();
+  var irregularExpression = /^\d+\s+User (\w+ [\w]+) \(\d+:\d+\) \(\w+\) Granted (Entry|Exit) (?:To|From) (?:\w+\s)+\(\w+\) Access Level (?:\w+\s?)+ \(\w+\) Reading Mode (\w+) Input\s+\d+-\d+-\d+ (\d+:\d+:\d+ (?:AM|PM))\s+(?:\w+ [\w]+)\s+\(\d+:\d+\)\s+(?:\w+\s)+\s+50 Keith\s+$/i;
+  var data = file.getDataAsString();
+  var lines = data.split("\n");
+  var regexResults = [];
+  do {
+    var linedata = lines.pop();
+    regexResults = linedata.match(irregularExpression);
+    if (linedata.indexOf("Granted Entry") > 0) {
+      roomcount++;
+    }
+    else if (linedata.indexOf("Granted Exit") > 0) {
+      roomcount--;
+    }
+    else if (linedata.indexOf("Alarm Activated") > 0) {
+      ohNoItsAnAlarm(body);
+    }
+    else if (linedata.indexOf("Armed By Admin") > 0) {
+      buryTheBodyCount(body)
+    }
+    if (roomcount < 0) {
+      whyIsTheCountBelowZero(body, roomcount);
+    }
+    if (regexResults) {
+      printTheShitToTheDocument(body, regexResults[1], regexResults[2], regexResults[4], roomcount);
+    }
+  } while (lines.length > 0);
+  goDocGo(doc);
+}
+
+function onFormSubmit(e) {
+  FormApp.getActiveForm();
+  var formResponse = e.response;
+  var itemResponses = formResponse.getItemResponses();
+  var name = itemResponses[0].getResponse();
+  var log = itemResponses[1].getResponse();
+
+  var content = DriveApp.getFileById(log);
+  var contentbody = content.getBlob();
+  parseAttachment(contentbody);
+}
